@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-granular-action-workload
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+  selector:
+    matchLabels:
+      app: test-granular-action-workload
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  template:
+    metadata:
+      labels:
+        app: test-granular-action-workload
+      name: test-granular-action-workload
+    spec:
+      containers:
+        - name: test-granular-action-workload-cpu-spec
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: RUN_TYPE
+              value: cpu
+            - name: CPU_PERCENT
+              value: "85"
+          resources:
+            {{- toYaml .Values.resources.container1 | nindent 12 }}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+
+        - name: test-granular-action-workload-cpu-spec2
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: RUN_TYPE
+              value: cpu
+            - name: CPU_PERCENT
+              value: "1"
+          resources:
+            {{- toYaml .Values.resources.container2 | nindent 12 }}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+
+        - name: test-granular-action-workload-mem-spec
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: RUN_TYPE
+              value: memory
+            - name: MEMORY_NUM
+              value: "230"
+          resources:
+            {{- toYaml .Values.resources.container3 | nindent 12 }}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      schedulerName: default-scheduler
+      securityContext: {}
